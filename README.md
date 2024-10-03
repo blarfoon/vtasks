@@ -1,6 +1,6 @@
-# VTask
+# VTasks
 
-VTask is a flexible and robust asynchronous task management system for Rust, designed to handle complex, interruptible workflows with ease.
+VTasks is a flexible and robust asynchronous task management system for Rust, designed to handle complex, interruptible workflows with ease.
 
 ## Features:
 - Hierarchical task structure with weighted subtasks
