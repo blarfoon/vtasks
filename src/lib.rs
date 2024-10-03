@@ -184,54 +184,40 @@ impl<N: Clone + Display + std::hash::Hash + Eq + Send + Sync + 'static> VTask<N>
         F: FnOnce(SubtaskContext) -> Fut,
         Fut: Future<Output = Result<()>> + Send + 'static,
     {
-        println!("Entering run_subtask for {}", name);
         let subtask = {
             let subtasks = self.subtasks.read().await;
-            println!("Acquired read lock on subtasks");
             subtasks
                 .get(name)
                 .cloned()
                 .ok_or_else(|| anyhow!("Subtask not found"))?
         };
-        println!("Retrieved subtask");
 
         let context = SubtaskContext {
             state: self.state.clone(),
             command_rx: self.command_rx.clone(),
         };
-        println!("Created SubtaskContext");
 
-        println!("About to execute subtask function");
         let result = f(context).await;
-        println!("Subtask function completed");
 
-        println!("Attempting to acquire write lock on subtasks");
         let remove_result = timeout(Duration::from_secs(5), async {
             let mut subtasks = self.subtasks.write().await;
-            println!("Acquired write lock on subtasks");
             if let Some(removed_subtask) = subtasks.remove(name) {
-                println!("Removed subtask from list");
                 let info = removed_subtask.read().await;
                 let weight = info.weight as u32;
                 drop(info);
                 let mut total_weight = self.total_weight.write().await;
                 *total_weight -= weight;
-                println!("Updated total weight");
             }
-            println!("Finished subtask removal process");
         })
         .await;
 
         match remove_result {
-            Ok(_) => println!("Successfully removed subtask"),
-            Err(_) => println!("Timed out while trying to remove subtask"),
+            Ok(_) => tracing::trace!("Successfully removed subtask"),
+            Err(_) => tracing::trace!("Timed out while trying to remove subtask"),
         }
 
-        println!("About to update progress");
         self.update_progress().await;
-        println!("Progress updated");
 
-        println!("Exiting run_subtask");
         result
     }
 
