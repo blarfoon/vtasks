@@ -14,7 +14,9 @@ Ideal for applications requiring structured, long-running operations with fine-g
 
 ## Usage
 ```rust
-use vtasks::{VTaskManager, VTaskCommand, Weight};
+use vtasks::{VTaskManager, VTaskCommand, Weight, Progress, ProgressUnit, interruptable};
+use std::time::Duration;
+use tokio::time::timeout;
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 enum TaskName {
